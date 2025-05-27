@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sankey Data Test</title>
+</head>
+<body>
+    <h2>Testing Sankey Data Processing</h2>
+    <div id="output"></div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="fetchData.js"></script>
+    <script src="dataProcessor.js"></script>
+    
+    <script>
+        async function test() {
+            const output = document.getElementById('output');
+            
+            try {
+                output.innerHTML += '<p>Loading data...</p>';
+                const data = await loadData();
+                
+                output.innerHTML += `<p>Loaded ${data.teamData.length} team records and ${data.salaryData.length} salary records</p>`;
+                
+                const processor = new DataProcessor();
+                const years = processor.getAvailableYears(data.teamData, data.salaryData);
+                
+                output.innerHTML += `<p>Available years: ${years.join(', ')}</p>`;
+                
+                if (years.length > 0) {
+                    const year = 2015; // Test with 2015
+                    const result = processor.processDataForYear(data.teamData, data.salaryData, year);
+                    
+                    output.innerHTML += `<p><strong>Year ${year} Results:</strong></p>`;
+                    output.innerHTML += `<p>Nodes: ${result.nodes.length}</p>`;
+                    output.innerHTML += `<p>Links: ${result.links.length}</p>`;
+                    
+                    // Show some sample data
+                    const teams = result.nodes.filter(n => n.category === 'team');
+                    output.innerHTML += `<p>Sample teams: ${teams.slice(0, 5).map(t => t.name).join(', ')}</p>`;
+                    
+                    console.log('Full results:', result);
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>
