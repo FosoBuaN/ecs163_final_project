@@ -108,27 +108,20 @@ class SankeyChart {
             console.log(`Current dimensions: ${this.width} x ${this.height}`);
             console.log(`New dimensions: ${newWidth} x ${newHeight}`);
             
-            // Only resize if dimensions actually changed significantly
-            if (Math.abs(newWidth - this.width) > 10 || Math.abs(newHeight - this.height) > 10) {
-                console.log('Dimensions changed significantly, updating chart...');
-                
-                this.width = newWidth;
-                this.height = newHeight;
-                
-                // Update SVG dimensions
-                this.svg
-                    .attr('width', this.width)
-                    .attr('height', this.height);
-                
-                this.updateInnerDimensions();
-                this.createSankeyLayout();
-                
-                console.log('Re-rendering chart with new dimensions...');
-                // Re-render with current data
-                this.renderChart(this.data);
-            } else {
-                console.log('Dimensions change too small, skipping resize');
-            }
+            this.width = newWidth;
+            this.height = newHeight;
+            
+            // Update SVG dimensions
+            this.svg
+                .attr('width', this.width)
+                .attr('height', this.height);
+            
+            this.updateInnerDimensions();
+            this.createSankeyLayout();
+            
+            console.log('Re-rendering chart with new dimensions...');
+            // Re-render with current data
+            this.render(this.data);
         } catch (error) {
             console.error('Error during resize:', error);
         } finally {
@@ -157,10 +150,10 @@ class SankeyChart {
     }
     
     renderChart(data) {
-        if (this.isResizing) {
-            console.log('Skipping render during resize');
-            return;
-        }
+        // if (this.isResizing) {
+        //     console.log('Skipping render during resize');
+        //     return;
+        // }
         
         console.log('Rendering chart...');
         
