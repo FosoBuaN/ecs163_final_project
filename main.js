@@ -6,6 +6,7 @@ let salaryData = [];
 let dataProcessor;
 let sankeyChart;
 let availableYears = [];
+const startYear = 2004;
 
 // Initialize the application
 async function init() {
@@ -23,6 +24,31 @@ async function init() {
         // Initialize responsive Sankey chart
         // The chart will automatically size itself based on the container
         sankeyChart = new SankeyChart('body');
+
+        
+        
+        let sliderContainer = document.getElementById('slider-container');
+        if (!sliderContainer) {
+            sliderContainer = document.createElement('div');
+            sliderContainer.id = 'slider-container';
+            sliderContainer.style.marginBottom = '20px';
+            sliderContainer.style.marginTop = '20px';
+            
+            // Insert at the top of the body (or wherever you want it)
+            document.body.appendChild(sliderContainer, document.body.firstChild);
+        }
+
+        // Now initialize the slider
+        const slider = new D3Slider({
+            container: sliderContainer, // Use the actual element, not getElementById
+            yearValue: startYear,
+            minValue: 1980,
+            maxValue: 2015,
+            callback: (value) => {
+                console.log('Year changed to:', value);
+                updateYear(value);
+            }
+        });
         
         // Get available years
         availableYears = dataProcessor.getAvailableYears(teamData, salaryData);
@@ -30,7 +56,7 @@ async function init() {
         
         // Process data for the most recent year with both datasets
         if (availableYears.length > 0) {
-            const year = 2010; // Try 2010 to see if we get better distribution
+            const year = startYear; // Try 2010 to see if we get better distribution
             console.log(`Processing data for year: ${year}`);
             const processedData = dataProcessor.processDataForYear(teamData, salaryData, year);
             
@@ -40,6 +66,7 @@ async function init() {
             
             // Render the Sankey chart
             sankeyChart.render(processedData);
+            slider.render();
             
             // Display data summary
             displayDataSummary(processedData, year);
@@ -50,6 +77,8 @@ async function init() {
     } catch (error) {
         console.error('Error initializing application:', error);
     }
+
+
     
     // Add resize test to window for debugging
     window.testResize = () => {
@@ -157,7 +186,7 @@ function displayDataSummary(data, year) {
     window.addEventListener('resize', debouncedReposition);
 }
 
-// Function to update year (for future interactivity)
+// Function to update year
 function updateYear(year) {
     if (dataProcessor && teamData.length > 0 && salaryData.length > 0) {
         console.log(`Updating to year: ${year}`);
