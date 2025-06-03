@@ -1,4 +1,4 @@
-// D3 Sankey visualization with responsive design
+// D3 Sankey visualization with responsive design and pulsing link animations
 class SankeyChart {
     constructor(container, width = 1000, height = 600) {
         this.container = container;
@@ -37,6 +37,9 @@ class SankeyChart {
             .attr('height', this.height)
             .style('max-width', '100%')
             .style('height', 'auto');
+            
+        // Add defs for gradients
+        this.svg.append('defs');
             
         this.g = this.svg.append('g')
             .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
@@ -166,6 +169,8 @@ class SankeyChart {
         this.svg.selectAll('.chart-title').remove();
         this.svg.selectAll('.column-labels').remove();
         this.svg.selectAll('.legend').remove();
+        // Clear gradients but keep defs element
+        this.svg.select('defs').selectAll('*').remove();
         
         // Prepare data for D3 Sankey
         const sankeyData = {
@@ -317,8 +322,80 @@ class SankeyChart {
     }
     
     showLinkTooltip(event, d) {
-        d3.select(event.currentTarget).attr('stroke-opacity', 0.8);
+        const linkElement = d3.select(event.currentTarget);
         
+        // Store original stroke for restoration
+        const originalStroke = linkElement.attr('stroke');
+        
+        // Set highlighted opacity
+        linkElement.attr('stroke-opacity', 0.8);
+        
+        // Create pulsing gradient for the link
+        const defs = this.svg.select('defs');
+        const gradientId = `link-pulse-gradient-${Math.random().toString(36).substr(2, 9)}`;
+        
+        const gradient = defs.append('linearGradient')
+            .attr('id', gradientId)
+            .attr('x1', '0%')
+            .attr('y1', '0%')
+            .attr('x2', '100%')
+            .attr('y2', '0%')
+            .attr('gradientUnits', 'objectBoundingBox');
+        
+        // Create gradient stops for the pulse effect
+        gradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', originalStroke || '#999')
+            .attr('stop-opacity', 0.4);
+            
+        gradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', '#ffffff')
+            .attr('stop-opacity', 1)
+            .attr('class', 'pulse-highlight');
+            
+        gradient.append('stop')
+            .attr('offset', '15%')
+            .attr('stop-color', originalStroke || '#999')
+            .attr('stop-opacity', 0.4);
+            
+        gradient.append('stop')
+            .attr('offset', '100%')
+            .attr('stop-color', originalStroke || '#999')
+            .attr('stop-opacity', 0.4);
+        
+        // Apply gradient to link
+        linkElement.attr('stroke', `url(#${gradientId})`);
+        
+        // Animate the pulse - seamless continuous animation
+        const pulseHighlight = gradient.select('.pulse-highlight');
+        
+        // Create a seamless infinite loop animation
+        function createContinuousAnimation() {
+            pulseHighlight
+                .attr('offset', '-15%') // Start before visible area
+                .transition()
+                .duration(2500) // Slower, smoother animation
+                .ease(d3.easeLinear)
+                .attr('offset', '115%') // End after visible area
+                .on('end', function() {
+                    // Only continue if tooltip still exists
+                    if (d3.select('.sankey-tooltip').node()) {
+                        createContinuousAnimation();
+                    }
+                });
+        }
+        
+        // Start the animation
+        createContinuousAnimation();
+        
+        // Store cleanup data on the link element
+        linkElement.node().__pulseData = {
+            gradientId: gradientId,
+            originalStroke: originalStroke
+        };
+        
+        // Create tooltip
         const tooltip = d3.select('body').append('div')
             .attr('class', 'sankey-tooltip')
             .style('position', 'absolute')
@@ -338,7 +415,26 @@ class SankeyChart {
     }
     
     hideLinkTooltip(event, d) {
-        d3.select(event.currentTarget).attr('stroke-opacity', 0.6);
+        const linkElement = d3.select(event.currentTarget);
+        
+        // Clean up pulse animation
+        if (linkElement.node().__pulseData) {
+            const pulseData = linkElement.node().__pulseData;
+            
+            // Remove the gradient
+            this.svg.select(`#${pulseData.gradientId}`).remove();
+            
+            // Restore original stroke
+            linkElement.attr('stroke', pulseData.originalStroke);
+            
+            // Clean up stored data
+            delete linkElement.node().__pulseData;
+        }
+        
+        // Restore opacity
+        linkElement.attr('stroke-opacity', 0.6);
+        
+        // Remove tooltip
         d3.selectAll('.sankey-tooltip').remove();
     }
     
