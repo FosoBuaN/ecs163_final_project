@@ -97,6 +97,12 @@ class SankeyChart {
             .attr('fill', d => colorScale(d.category))
             .attr('stroke', '#333')
             .attr('stroke-width', 1)
+            .style('cursor', d => d.category === 'team' ? 'pointer' : 'default')
+            .on('click', (event, d) => {
+                if (d.category === 'team' && this.onTeamClick) {
+                    this.onTeamClick(d.name, d.teamId);
+                }
+            })
             .on('mouseover', function(event, d) {
                 d3.select(this).attr('fill-opacity', 0.8);
                 
@@ -118,7 +124,10 @@ class SankeyChart {
                     .style('opacity', 0);
                 
                 tooltip.transition().duration(200).style('opacity', 1);
-                tooltip.html(`${d.name}<br/>Category: ${d.category}<br/>Value: ${d.value || 'N/A'}`)
+                const tooltipText = d.category === 'team' ? 
+                    `${d.name}<br/>Category: ${d.category}<br/>Value: ${d.value || 'N/A'}<br/><em>Click for detailed stats</em>` :
+                    `${d.name}<br/>Category: ${d.category}<br/>Value: ${d.value || 'N/A'}`;
+                tooltip.html(tooltipText)
                     .style('left', (event.pageX + 10) + 'px')
                     .style('top', (event.pageY - 10) + 'px');
             })
@@ -199,6 +208,35 @@ class SankeyChart {
             .attr('dy', '0.35em')
             .attr('font-size', '11px')
             .text(d => d.label);
+    }
+    
+    // Set callback for team clicks
+    setTeamClickCallback(callback) {
+        this.onTeamClick = callback;
+    }
+    
+    // Fade out the Sankey chart
+    fadeOut() {
+        this.svg.transition()
+            .duration(300)
+            .style('opacity', 0.15);
+    }
+    
+    // Fade in the Sankey chart
+    fadeIn() {
+        this.svg.transition()
+            .duration(300)
+            .style('opacity', 1);
+    }
+    
+    // Hide the Sankey chart completely
+    hide() {
+        this.svg.style('display', 'none');
+    }
+    
+    // Show the Sankey chart
+    show() {
+        this.svg.style('display', 'block');
     }
 }
 

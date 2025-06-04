@@ -78,7 +78,7 @@ class DataProcessor {
         }
 
         // Create nodes sets
-        const teams = new Set();
+        const teams = new Map(); // Map to store team name -> team_id mapping
         const salaryRanges = new Set(['Low Salary', 'Medium Salary', 'High Salary']);
         const performanceLevels = new Set(['Low Performance', 'Medium Performance', 'High Performance']);
 
@@ -91,7 +91,7 @@ class DataProcessor {
             const losses = +team.l || 0;
             const winPercentage = this.calculateWinPercentage(wins, losses);
             
-            teams.add(teamName);
+            teams.set(teamName, team.team_id); // Store team name to ID mapping
             
             // Get team's average salary
             const avgSalary = teamSalaries[team.team_id] || 0;
@@ -136,10 +136,10 @@ class DataProcessor {
         });
 
         // Add team nodes (only used ones)
-        teams.forEach(team => {
-            if (usedNodes.has(team)) {
-                this.nodes.push({ id: index, name: team, category: 'team' });
-                nodeIndex[team] = index++;
+        teams.forEach((teamId, teamName) => {
+            if (usedNodes.has(teamName)) {
+                this.nodes.push({ id: index, name: teamName, category: 'team', teamId: teamId });
+                nodeIndex[teamName] = index++;
             }
         });
 

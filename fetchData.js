@@ -10,12 +10,13 @@ async function loadCSV(filename) {
     }
 }
 
-// Load both datasets
+// Load all datasets
 async function loadData() {
-    const [teamData, salaryData] = await Promise.all([
+    const [teamData, salaryData, battingData] = await Promise.all([
         loadCSV('data/team.csv'),
-        loadCSV('data/salary.csv')
+        loadCSV('data/salary.csv'),
+        loadCSV('data/batting.csv')
     ]);
     
-    return { teamData, salaryData };
+    return { teamData, salaryData, battingData };
 }
