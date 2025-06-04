@@ -15,20 +15,78 @@ class SankeyChart {
         this.setupResizeListener();
     }
 
-    initializeSVG() {
-        // Remove existing SVG if present
-        d3.select(this.container).select('svg').remove();
-
-        // Get container dimensions
+    // Helper method to get container's available space considering margin and padding
+    getContainerDimensions() {
         const containerElement = typeof this.container === 'string'
             ? document.querySelector(this.container)
             : this.container;
 
+        if (!containerElement) {
+            console.warn('Container element not found');
+            return { width: this.baseWidth, height: this.baseHeight };
+        }
+
+        // Get the container's bounding box
         const containerRect = containerElement.getBoundingClientRect();
 
-        // Calculate responsive dimensions
-        this.width = Math.max(400, Math.min(containerRect.width - 40, window.innerWidth - 40));
-        this.height = Math.max(300, Math.min(this.width * 0.6, window.innerHeight - 100));
+        // Get computed styles to account for padding and margin
+        const computedStyle = window.getComputedStyle(containerElement);
+
+        // Extract padding values
+        const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+        const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+        const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+        const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+
+        // Extract margin values
+        const marginLeft = parseFloat(computedStyle.marginLeft) || 0;
+        const marginRight = parseFloat(computedStyle.marginRight) || 0;
+        const marginTop = parseFloat(computedStyle.marginTop) || 0;
+        const marginBottom = parseFloat(computedStyle.marginBottom) || 0;
+
+        // Extract border values
+        const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+        const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+        const borderTop = parseFloat(computedStyle.borderTopWidth) || 0;
+        const borderBottom = parseFloat(computedStyle.borderBottomWidth) || 0;
+
+        // Calculate available space
+        const horizontalSpacing = paddingLeft + paddingRight + marginLeft + marginRight + borderLeft + borderRight;
+        const verticalSpacing = paddingTop + paddingBottom + marginTop + marginBottom + borderTop + borderBottom;
+
+        // Available content area
+        const availableWidth = Math.max(400, containerRect.width - horizontalSpacing);
+        const availableHeight = Math.max(300, containerRect.height - verticalSpacing);
+
+        // Also consider viewport constraints
+        const maxViewportWidth = window.innerWidth - 40; // Leave some viewport margin
+        const maxViewportHeight = window.innerHeight - 100; // Leave some viewport margin
+
+        const finalWidth = Math.min(availableWidth, maxViewportWidth);
+        const finalHeight = Math.min(availableHeight, maxViewportHeight, finalWidth * 0.6); // Maintain aspect ratio
+
+        console.log('Container spacing calculation:', {
+            containerRect: { width: containerRect.width, height: containerRect.height },
+            padding: { left: paddingLeft, right: paddingRight, top: paddingTop, bottom: paddingBottom },
+            margin: { left: marginLeft, right: marginRight, top: marginTop, bottom: marginBottom },
+            border: { left: borderLeft, right: borderRight, top: borderTop, bottom: borderBottom },
+            totalHorizontalSpacing: horizontalSpacing,
+            totalVerticalSpacing: verticalSpacing,
+            availableSpace: { width: availableWidth, height: availableHeight },
+            finalDimensions: { width: finalWidth, height: finalHeight }
+        });
+
+        return { width: finalWidth, height: finalHeight };
+    }
+
+    initializeSVG() {
+        // Remove existing SVG if present
+        d3.select(this.container).select('svg').remove();
+
+        // Get container dimensions considering spacing
+        const dimensions = this.getContainerDimensions();
+        this.width = dimensions.width;
+        this.height = dimensions.height;
 
         // Create SVG with responsive dimensions
         this.svg = d3.select(this.container)
@@ -36,7 +94,8 @@ class SankeyChart {
             .attr('width', this.width)
             .attr('height', this.height)
             .style('max-width', '100%')
-            .style('height', 'auto');
+            .style('height', 'auto')
+            .style('display', 'block'); // Prevent inline spacing issues
 
         // Add defs for gradients
         this.svg.append('defs');
@@ -88,25 +147,23 @@ class SankeyChart {
         this.isResizing = true;
 
         try {
-            // Get new container dimensions
-            const containerElement = typeof this.container === 'string'
-                ? document.querySelector(this.container)
-                : this.container;
-
-            if (!containerElement) {
-                console.warn('Container element not found');
-                this.isResizing = false;
-                return;
-            }
-
-            const containerRect = containerElement.getBoundingClientRect();
-
-            // Calculate new dimensions
-            const newWidth = Math.max(400, Math.min(containerRect.width - 40, window.innerWidth - 40));
-            const newHeight = Math.max(300, Math.min(newWidth * 0.6, window.innerHeight - 100));
+            // Get new container dimensions considering spacing
+            const dimensions = this.getContainerDimensions();
+            const newWidth = dimensions.width;
+            const newHeight = dimensions.height;
 
             console.log(`Current dimensions: ${this.width} x ${this.height}`);
             console.log(`New dimensions: ${newWidth} x ${newHeight}`);
+
+            // Only resize if dimensions actually changed significantly
+            const widthDiff = Math.abs(newWidth - this.width);
+            const heightDiff = Math.abs(newHeight - this.height);
+
+            if (widthDiff < 10 && heightDiff < 10) {
+                console.log('Dimensions change too small, skipping resize');
+                this.isResizing = false;
+                return;
+            }
 
             this.width = newWidth;
             this.height = newHeight;
@@ -134,8 +191,8 @@ class SankeyChart {
     }
 
     getResponsiveFontSize(baseSize) {
-        // Scale font sizes based on chart width
-        const scaleFactor = Math.max(0.7, Math.min(1.3, this.width / 1000));
+        // Very conservative scaling
+        const scaleFactor = Math.max(0.8, Math.min(1.2, this.width / 1200));
         return Math.round(baseSize * scaleFactor);
     }
 
@@ -150,11 +207,6 @@ class SankeyChart {
     }
 
     renderChart(data) {
-        // if (this.isResizing) {
-        //     console.log('Skipping render during resize');
-        //     return;
-        // }
-
         console.log('Rendering chart...');
 
         // Clear previous content
@@ -589,6 +641,10 @@ class SankeyChart {
         console.log('Window dimensions:', window.innerWidth, 'x', window.innerHeight);
         console.log('Has data:', !!this.data);
         console.log('Is resizing:', this.isResizing);
+
+        // Show detailed container info
+        const dimensions = this.getContainerDimensions();
+        console.log('Container analysis:', dimensions);
 
         // Simulate a small resize
         window.dispatchEvent(new Event('resize'));

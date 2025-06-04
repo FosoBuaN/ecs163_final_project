@@ -10,29 +10,6 @@ let sankeyChart;
 let availableYears = [];
 const startYear = 2004;
 
-// // Updated loadData function to match DataProcessor expectations
-// async function loadCSV(filename) {
-//     try {
-//         const response = await fetch(filename);
-//         const text = await response.text();
-//         return d3.csvParse(text);
-//     } catch (error) {
-//         console.error(`Error loading ${filename}:`, error);
-//         return [];
-//     }
-// }
-
-// // Load batting, salary, and team datasets
-// async function loadData() {
-//     const [battingData, salaryData, teamData] = await Promise.all([
-//         loadCSV('data/batting.csv'),
-//         loadCSV('data/salary.csv'),
-//         loadCSV('data/team.csv')
-//     ]);
-
-//     return { battingData, salaryData, teamData };
-// }
-
 // Initialize the application
 async function init() {
     try {
@@ -44,12 +21,42 @@ async function init() {
 
         console.log(`Loaded ${battingData.length} batting records, ${salaryData.length} salary records, and ${teamData.length} team records`);
 
+
         // Initialize data processor
         dataProcessor = new DataProcessor();
 
         // Initialize responsive Sankey chart
         // The chart will automatically size itself based on the container
-        sankeyChart = new SankeyChart('body');
+        // Create Sankey chart container
+        let sankeyContainer = document.getElementById('sankey-container');
+        if (!sankeyContainer) {
+            sankeyContainer = document.createElement('div');
+            sankeyContainer.id = 'sankey-container';
+
+            // Container styling for controlled height
+            sankeyContainer.style.cssText = `
+                width: 100%;
+                height: 500px;
+                max-height: 70vh;
+                min-height: 400px;
+                margin: 20px 0;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                background: white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                overflow: hidden;
+                position: relative;
+            `;
+
+            // Insert into body (slider positioning handled separately)
+            document.body.appendChild(sankeyContainer);
+        }
+
+        // Slider container handling is done separately - keep it modular
+
+        // Initialize responsive Sankey chart with the container
+        // The chart will automatically size itself based on the container dimensions
+        sankeyChart = new SankeyChart('#sankey-container');
 
         // Create slider container
         let sliderContainer = document.getElementById('slider-container');
@@ -106,6 +113,64 @@ async function init() {
 
         // Render the Sankey chart
         sankeyChart.render(processedData);
+
+        // Insert the demo slide
+        // window.PresentationOverlay.addSlide("Live Demo", function (container) {
+        //     // Create title
+        //     container.append('h1')
+        //         .text('Live Sankey Chart Demo')
+        //         .style('font-size', '36px')
+        //         .style('color', 'white')
+        //         .style('text-align', 'center')
+        //         .style('margin-bottom', '20px')
+        //         .style('font-weight', 'bold')
+        //         .style('text-shadow', '2px 2px 4px rgba(0,0,0,0.8)');
+
+        //     // Create a container for the chart
+        //     const chartContainer = container.append('div')
+        //         .attr('id', 'demo-chart-container')
+        //         .style('width', '80%')
+        //         .style('height', '400px')
+        //         .style('margin', '0 auto')
+        //         .style('background', 'rgba(255,255,255,0.1)')
+        //         .style('border-radius', '10px')
+        //         .style('border', '2px solid rgba(255,255,255,0.3)');
+
+        //     // Initialize the Sankey chart in this container
+        //     // Note: We need to wait a moment for the DOM to be ready
+        //     setTimeout(() => {
+        //         try {
+        //             // Initialize your Sankey chart in the demo container
+        //             const demoChart = new SankeyChart('#demo-chart-container');
+        //             demoChart.render(processedData);
+
+        //             // Optional: Store reference to clean up later if needed
+        //             container.property('__sankeyChart', demoChart);
+        //         } catch (error) {
+        //             console.error('Error creating demo chart:', error);
+        //             // Fallback content if chart fails
+        //             chartContainer.append('div')
+        //                 .text('Chart demo would appear here')
+        //                 .style('display', 'flex')
+        //                 .style('align-items', 'center')
+        //                 .style('justify-content', 'center')
+        //                 .style('height', '100%')
+        //                 .style('color', 'white')
+        //                 .style('font-size', '18px');
+        //         }
+        //     }, 100);
+
+        //     // Add description
+        //     container.append('p')
+        //         .text('This is a live, interactive version of your MLB player movement visualization.')
+        //         .style('font-size', '16px')
+        //         .style('color', 'white')
+        //         .style('margin-top', '15px')
+        //         .style('text-align', 'center')
+        //         .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)');
+        // });
+
+        // Render the slider
         slider.render();
 
         // Display data summary
