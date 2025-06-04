@@ -266,25 +266,25 @@ function displayDataSummary(data, year) {
     const toggleButton = document.createElement('span');
     toggleButton.style.cssText = `
         font-size: 18px;
-        transform: rotate(0deg);
+        transform: rotate(-90deg);
         transition: transform 0.3s ease;
         color: #666;
     `;
     toggleButton.textContent = '▼';
-    toggleButton.setAttribute('aria-label', 'Toggle summary details');
+    toggleButton.setAttribute('aria-label', 'Expand summary details');
 
     headerDiv.appendChild(titleSpan);
     headerDiv.appendChild(toggleButton);
 
-    // Create content div
+    // Create content div - START COLLAPSED
     const contentDiv = document.createElement('div');
     contentDiv.className = 'summary-content';
     contentDiv.style.cssText = `
-        padding: 15px;
+        padding: 0 15px;
         overflow: hidden;
-        transition: max-height 0.3s ease, opacity 0.3s ease;
-        max-height: 500px;
-        opacity: 1;
+        transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+        max-height: 0px;
+        opacity: 0;
     `;
 
     // Include performance statistics if available
@@ -309,8 +309,8 @@ function displayDataSummary(data, year) {
         ${isSmallScreen ? '<p style="color: #999; font-size: 9px; margin-bottom: 0;">Rotate device for better view</p>' : ''}
     `;
 
-    // Add toggle functionality
-    let isCollapsed = false;
+    // Add toggle functionality - START WITH COLLAPSED STATE
+    let isCollapsed = true;
     const toggleSummary = () => {
         isCollapsed = !isCollapsed;
 
