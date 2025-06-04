@@ -1,4 +1,4 @@
-// Data fetching utilities
+// Updated fetchData.js to load batting.csv, salary.csv, and team.csv
 async function loadCSV(filename) {
     try {
         const response = await fetch(filename);
@@ -10,12 +10,13 @@ async function loadCSV(filename) {
     }
 }
 
-// Load both datasets
+// Load batting, salary, and team datasets
 async function loadData() {
-    const [teamData, salaryData] = await Promise.all([
-        loadCSV('data/team.csv'),
-        loadCSV('data/salary.csv')
+    const [battingData, salaryData, teamData] = await Promise.all([
+        loadCSV('data/batting.csv'),
+        loadCSV('data/salary.csv'),
+        loadCSV('data/team.csv') 
     ]);
     
-    return { teamData, salaryData };
+    return { battingData, salaryData, teamData };
 }
