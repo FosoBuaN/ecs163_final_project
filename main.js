@@ -114,6 +114,9 @@ async function init() {
         // Render the Sankey chart
         sankeyChart.render(processedData);
 
+        // Set batting data for team bar chart functionality
+        sankeyChart.setBattingData(battingData, targetYear);
+
         // Insert the demo slide
         // window.PresentationOverlay.addSlide("Live Demo", function (container) {
         //     // Create title
@@ -405,6 +408,9 @@ function updateYear(year) {
 
         sankeyChart.render(processedData);
         displayDataSummary(processedData, year);
+
+        // Update bar chart year and batting data
+        sankeyChart.setBattingData(battingData, year);
 
         // Log updated summary
         dataProcessor.logDetailedSummary();

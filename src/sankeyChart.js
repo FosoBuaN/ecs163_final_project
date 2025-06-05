@@ -11,6 +11,12 @@ class SankeyChart {
         this.resizeTimeout = null;
         this.isResizing = false;
 
+        // Initialize team bar chart
+        this.teamBarChart = null;
+        this.battingData = null;
+        this.currentYear = null;
+        this.currentSelectedTeam = null; // Track selected team for year updates
+
         this.initializeSVG();
         this.setupResizeListener();
     }
@@ -264,8 +270,10 @@ class SankeyChart {
             .attr('fill', d => colorScale(d.category))
             .attr('stroke', '#333')
             .attr('stroke-width', 1)
+            .style('cursor', d => d.category === 'team' ? 'pointer' : 'default')
             .on('mouseover', (event, d) => this.showNodeTooltip(event, d, link))
-            .on('mouseout', (event, d) => this.hideNodeTooltip(event, d, link));
+            .on('mouseout', (event, d) => this.hideNodeTooltip(event, d, link))
+            .on('click', (event, d) => this.handleNodeClick(event, d));
 
         // Node labels with responsive font size
         const labelFontSize = this.getResponsiveFontSize(11);
@@ -658,6 +666,62 @@ class SankeyChart {
         clearTimeout(this.resizeTimeout);
         d3.selectAll('.sankey-tooltip').remove();
         d3.select(this.container).select('svg').remove();
+        
+        // Clean up team bar chart
+        if (this.teamBarChart) {
+            this.teamBarChart.destroy();
+        }
+    }
+
+    // Set batting data for bar chart calculations
+    setBattingData(battingData, currentYear) {
+        this.battingData = battingData;
+        this.currentYear = currentYear;
+        
+        // Initialize team bar chart if not already done
+        if (!this.teamBarChart && window.TeamBarChart) {
+            this.teamBarChart = new window.TeamBarChart();
+        }
+    }
+
+    // Handle node click events
+    handleNodeClick(event, d) {
+        // Only handle clicks on team nodes
+        if (d.category !== 'team') {
+            return;
+        }
+
+        // Get team details from the data
+        const nodeDetails = this.data?.nodeDetails?.[d.id];
+        if (!nodeDetails || !this.battingData || !this.currentYear) {
+            console.warn('Missing data for team bar chart:', {
+                nodeDetails: !!nodeDetails,
+                battingData: !!this.battingData,
+                currentYear: this.currentYear
+            });
+            return;
+        }
+
+        // Initialize team bar chart if needed
+        if (!this.teamBarChart && window.TeamBarChart) {
+            this.teamBarChart = new window.TeamBarChart();
+        }
+
+        if (this.teamBarChart) {
+            const teamName = d.name;
+            const teamId = nodeDetails.teamId;
+            
+            console.log(`Showing bar chart for team: ${teamName} (${teamId}) for year ${this.currentYear}`);
+            this.teamBarChart.show(teamName, teamId, this.battingData, this.currentYear);
+        }
+    }
+
+    // Update year for bar chart
+    updateBarChartYear(newYear) {
+        this.currentYear = newYear;
+        if (this.teamBarChart) {
+            this.teamBarChart.updateYear(newYear);
+        }
     }
 }
 
