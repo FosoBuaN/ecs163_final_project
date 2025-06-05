@@ -57,6 +57,7 @@ async function init() {
         // Initialize responsive Sankey chart with the container
         // The chart will automatically size itself based on the container dimensions
         sankeyChart = new SankeyChart('#sankey-container');
+        window.sankeyGlobalInstance = sankeyChart;
 
         // Create slider container
         let sliderContainer = document.getElementById('slider-container');
