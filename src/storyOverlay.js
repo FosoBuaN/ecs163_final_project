@@ -400,5 +400,15 @@
     } else {
         init();
     }
+    
 
 })();
+
+function setCaption(text) {
+    d3.select("#captionBox").text(text);
+}
+
+// Expose to story.js
+window.storyOverlay = {
+    setCaption
+};
