@@ -1,3 +1,6 @@
+if (window.showMiniDashboard) {
+    window.showMiniDashboard(nodeDetails);
+}
 // D3 Sankey visualization with responsive design and pulsing link animations
 class SankeyChart {
     constructor(container, width = 1000, height = 600) {
@@ -686,35 +689,49 @@ class SankeyChart {
 
     // Handle node click events
     handleNodeClick(event, d) {
-        // Only handle clicks on team nodes
-        if (d.category !== 'team') {
-            return;
-        }
+    const nodeDetails = this.data?.nodeDetails?.[String(d.id)];
+    if (!nodeDetails || !this.currentYear) {
+        console.warn('Missing data for node click:', {
+            nodeId: d.id,
+            nodeDetails: !!nodeDetails,
+            currentYear: this.currentYear
+        });
+        return;
+    }
+    console.log("📍 Dashboard trigger check:");
+    console.log("Clicked node ID:", d.id);
+    console.log("Node category:", d.category);
+    console.log("Available nodeDetails keys:", Object.keys(this.data?.nodeDetails || {}));
+    console.log("Resolved nodeDetails entry:", this.data?.nodeDetails?.[d.id]);
 
-        // Get team details from the data
-        const nodeDetails = this.data?.nodeDetails?.[d.id];
-        if (!nodeDetails || !this.battingData || !this.currentYear) {
-            console.warn('Missing data for team bar chart:', {
-                nodeDetails: !!nodeDetails,
-                battingData: !!this.battingData,
-                currentYear: this.currentYear
-            });
-            return;
-        }
+    // ✅ Mini-dashboard logic (salary or performance)
+    if (d.category === "salary" || d.category === "performance") {
 
-        // Initialize team bar chart if needed
+        if (window.showMiniDashboard) {
+            // Pass the full nodeDetails object so miniDashboard can inspect
+            window.showMiniDashboard(nodeDetails);
+        } else {
+            console.warn('MiniDashboard not loaded.');
+        }
+        return; // Exit after dashboard
+    }
+
+    // ✅ Team bar chart logic (for team nodes)
+    if (d.category === 'team') {
         if (!this.teamBarChart && window.TeamBarChart) {
             this.teamBarChart = new window.TeamBarChart();
         }
 
         if (this.teamBarChart) {
             const teamName = d.name;
-            const teamId = nodeDetails.teamId;
-            
+            const teamId = nodeDetails.teamId || d.id;
+
             console.log(`Showing bar chart for team: ${teamName} (${teamId}) for year ${this.currentYear}`);
             this.teamBarChart.show(teamName, teamId, this.battingData, this.currentYear);
         }
     }
+}
+
 
     // Update year for bar chart
     updateBarChartYear(newYear) {
@@ -723,6 +740,41 @@ class SankeyChart {
             this.teamBarChart.updateYear(newYear);
         }
     }
+    
 }
+
+// Highlight a node by ID and apply pulse effect
+function pulseNode(nodeId) {
+    d3.selectAll(".node rect")
+        .filter(function(d) {
+            return d.name === nodeId;
+        })
+        .transition()
+        .duration(300)
+        .style("stroke", "orange")
+        .style("stroke-width", 4)
+        .transition()
+        .duration(300)
+        .style("stroke-width", 2)
+        .transition()
+        .duration(300)
+        .style("stroke-width", 4);
+}
+
+// Clear all highlights
+function clearHighlights() {
+    d3.selectAll(".node rect")
+        .transition()
+        .duration(300)
+        .style("stroke", null)
+        .style("stroke-width", null);
+}
+
+// Expose to story.js
+window.sankeyChart = {
+    pulseNode,
+    clearHighlights
+};
+
 
 window.SankeyChart = SankeyChart;
