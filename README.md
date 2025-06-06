@@ -1,4 +1,4 @@
-# ⚾ Salary vs. Performance — MLB Visualization
+# Salary vs. Performance — MLB Visualization
 
 **Team 25 – ECS163 Final Project**  
 Interactive Sankey diagram + storytelling walkthrough for exploring the relationship between MLB team salary and performance across 30 seasons.
@@ -19,7 +19,7 @@ We wanted to explore the relationship between how much a team spends and how wel
 
 ---
 
-## 🌐 How It Works
+## How It Works
 
 - **Sankey Diagram** encodes team ➝ salary ➝ performance percentiles with animated flows  
 - **Legend + Slider:** Users can select a specific year and explore trends  
@@ -29,7 +29,7 @@ We wanted to explore the relationship between how much a team spends and how wel
 
 ---
 
-## 🔧 Installation
+## Installation
 
 To host the site:
 
@@ -46,3 +46,5 @@ python3 -m http.server 8000
 ```
 Then open your browser to:
 http://localhost:8000
+
+Note: This was designed with substantial input from GitHub Copilot (Primarily using Claude Sonnet 4)
